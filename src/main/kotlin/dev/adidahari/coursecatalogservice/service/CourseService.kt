@@ -3,18 +3,29 @@ package dev.adidahari.coursecatalogservice.service
 import dev.adidahari.coursecatalogservice.dto.CourseDTO
 import dev.adidahari.coursecatalogservice.entity.Course
 import dev.adidahari.coursecatalogservice.exception.CourseNotFoundException
+import dev.adidahari.coursecatalogservice.exception.InstructorNotValidException
 import dev.adidahari.coursecatalogservice.repository.CourseRepository
 import mu.KLogging
 import org.springframework.stereotype.Service
 
 @Service
-class CourseService(val courseRepository: CourseRepository) {
+class CourseService(
+    val courseRepository: CourseRepository,
+    val instructorService: InstructorService
+) {
 
-    companion object: KLogging()
+    companion object : KLogging()
+
     fun addCourse(courseDTO: CourseDTO): CourseDTO {
 
+        val instructorOptional = instructorService.finfByInstructorId(courseDTO.instructorId!!)
+
+        if (!instructorOptional.isPresent) {
+            throw InstructorNotValidException("Instructor does not exist for id: ${courseDTO.instructorId}")
+        }
+
         val courseEntity = courseDTO.let {
-            Course(null, it.name, it.category)
+            Course(null, it.name, it.category, instructorOptional.get())
         }
 
         courseRepository.save(courseEntity)
@@ -22,16 +33,19 @@ class CourseService(val courseRepository: CourseRepository) {
         logger.info("Saved Course is: $courseEntity")
 
         return courseEntity.let {
-            CourseDTO(it.id, it.name, it.category)
+            CourseDTO(it.id, it.name, it.category, it.instructor!!.id)
         }
     }
 
-    fun retrieveAllCourses(): List<CourseDTO> {
+    fun retrieveAllCourses(courseName: String?): List<CourseDTO> {
 
-        return courseRepository.findAll()
-            .map {
-                CourseDTO(it.id, it.name, it.category)
-            }
+        val courses = courseName?.let {
+            courseRepository.findCoursesByName(courseName)
+        } ?: courseRepository.findAll()
+
+        return courses.map {
+            CourseDTO(it.id, it.name, it.category)
+        }
     }
 
     fun updateCourse(courseId: Int, courseDTO: CourseDTO): CourseDTO {

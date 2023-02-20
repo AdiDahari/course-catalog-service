@@ -34,7 +34,8 @@ class CourseControllerUnitTest {
         val courseDTO = CourseDTO(
             null,
             "Build Restful APIs using Springboot and Kotlin",
-            "Development"
+            "Development",
+            1
         )
 
         val savedCourseDTO = webTestClient.post()
@@ -53,7 +54,7 @@ class CourseControllerUnitTest {
     @Test
     fun retrieveAllCourses() {
 
-        every { courseServiceMock.retrieveAllCourses() }.returnsMany(
+        every { courseServiceMock.retrieveAllCourses(any()) }.returnsMany(
             listOf(
                 courseDTO(id = 1),
                 courseDTO(id = 2, name = "Build Restful APIs using Springboot and Kotlin")
@@ -78,7 +79,9 @@ class CourseControllerUnitTest {
 
         val updatedCourseDTO = CourseDTO(
             null,
-            "Build RestFul APis using SpringBoot and Kotlin1", "Development"
+            "Build RestFul APis using SpringBoot and Kotlin1",
+            "Development",
+            1
         )
 
         val updatedCourse = webTestClient.put()
@@ -111,7 +114,8 @@ class CourseControllerUnitTest {
         val courseDTO = CourseDTO(
             null,
             "",
-            ""
+            "",
+            1
         )
 
         val response = webTestClient.post()
@@ -131,7 +135,9 @@ class CourseControllerUnitTest {
     fun addCourse_runtimeException() {
         val courseDTO = CourseDTO(
             null,
-            "Build RestFul APis using SpringBoot and Kotlin1", "Development"
+            "Build RestFul APis using SpringBoot and Kotlin1",
+            "Development",
+            1
         )
 
         val errorMessage = "Unexpected Error occured"

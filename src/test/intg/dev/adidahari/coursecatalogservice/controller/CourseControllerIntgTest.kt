@@ -3,7 +3,9 @@ package dev.adidahari.coursecatalogservice.controller
 import dev.adidahari.coursecatalogservice.dto.CourseDTO
 import dev.adidahari.coursecatalogservice.entity.Course
 import dev.adidahari.coursecatalogservice.repository.CourseRepository
+import dev.adidahari.coursecatalogservice.repository.InstructorRepository
 import dev.adidahari.coursecatalogservice.util.courseEntityList
+import dev.adidahari.coursecatalogservice.util.instructorEntity
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -16,6 +18,7 @@ import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWeb
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.web.util.UriComponentsBuilder
 import java.util.stream.Stream
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -28,22 +31,32 @@ class CourseControllerIntgTest {
     @Autowired
     lateinit var courseRepository: CourseRepository
 
+    @Autowired
+    lateinit var instructorRepository: InstructorRepository
+
     @BeforeEach
     fun setUp() {
 
+        instructorRepository.deleteAll()
         courseRepository.deleteAll()
 
-        val courses = courseEntityList()
+        val instructor = instructorEntity()
+        instructorRepository.save(instructor)
 
+        val courses = courseEntityList(instructor)
         courseRepository.saveAll(courses)
     }
 
     @Test
     fun addCourse() {
+
+        val instructor = instructorRepository.findAll().first()
+
         val courseDTO = CourseDTO(
             null,
             "Build Restful APIs using Springboot and Kotlin",
-            "Development"
+            "Development",
+            instructor.id
         )
 
         val savedCourseDTO = webTestClient.post()
@@ -73,17 +86,42 @@ class CourseControllerIntgTest {
     }
 
     @Test
+    fun retrieveAllCoursesByName() {
+
+        val uri = UriComponentsBuilder.fromUriString("/v1/courses")
+            .queryParam("course_name", "SpringBoot")
+            .toUriString()
+
+        val courseDTOs = webTestClient.get()
+            .uri(uri)
+            .exchange()
+            .expectStatus().isOk
+            .expectBodyList(CourseDTO::class.java)
+            .returnResult().responseBody
+
+        println("courseDTOs: $courseDTOs")
+        assertEquals(2, courseDTOs!!.size)
+    }
+
+    @Test
     fun updateCourse() {
+
+        val instructor = instructorRepository.findAll().first()
+
         val course = Course(
             null,
-            "Build RestFul APis using SpringBoot and Kotlin", "Development"
+            "Build RestFul APis using SpringBoot and Kotlin",
+            "Development",
+            instructor
         )
 
         courseRepository.save(course)
 
         val updatedCourseDTO = CourseDTO(
             null,
-            "Build RestFul APis using SpringBoot and Kotlin1", "Development"
+            "Build RestFul APis using SpringBoot and Kotlin1",
+            "Development",
+            course.instructor!!.id
         )
 
         val updatedCourse = webTestClient.put()
@@ -99,19 +137,19 @@ class CourseControllerIntgTest {
 
     @Test
     fun deleteCourse() {
+
+        val instructor = instructorRepository.findAll().first()
+
         val course = Course(
             null,
-            "Build RestFul APis using SpringBoot and Kotlin", "Development"
+            "Build RestFul APis using SpringBoot and Kotlin",
+            "Development",
+            instructor
         )
 
         courseRepository.save(course)
 
-        val updatedCourseDTO = CourseDTO(
-            null,
-            "Build RestFul APis using SpringBoot and Kotlin1", "Development"
-        )
-
-        val updatedCourse = webTestClient.delete()
+        webTestClient.delete()
             .uri("/v1/courses/{courseId}", course.id)
             .exchange()
             .expectStatus().isNoContent

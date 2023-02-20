@@ -1,5 +1,6 @@
 package dev.adidahari.coursecatalogservice.exceptionhandler
 
+import dev.adidahari.coursecatalogservice.exception.InstructorNotValidException
 import mu.KLogging
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -40,6 +41,14 @@ class GlobalErrorHandler : ResponseEntityExceptionHandler() {
 
         logger.error("Exception caught: ${ex.message}", ex)
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(ex.message)
+    }
+
+    @ExceptionHandler(InstructorNotValidException::class)
+    fun instructorNotValidExceptions(ex: InstructorNotValidException, request: WebRequest): ResponseEntity<Any> {
+
+        logger.error("Exception caught: ${ex.message}", ex)
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(ex.message)
     }
 }
