@@ -1,5 +1,6 @@
 package dev.adidahari.coursecatalogservice.util
 
+import dev.adidahari.coursecatalogservice.dto.CourseDTO
 import dev.adidahari.coursecatalogservice.entity.Course
 
 fun courseEntityList() = listOf(
@@ -17,3 +18,13 @@ fun courseEntityList() = listOf(
     )
 )
 
+fun courseDTO(
+    id: Int? = null,
+    name: String = "Build RestFul APis using Spring Boot and Kotlin",
+    category: String = "Development",
+    instructorId: Int? = 1
+) = CourseDTO(
+    id,
+    name,
+    category,
+)
