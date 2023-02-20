@@ -9,6 +9,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.runs
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
@@ -44,7 +45,7 @@ class CourseControllerUnitTest {
             .expectBody(CourseDTO::class.java)
             .returnResult().responseBody
 
-        Assertions.assertTrue {
+        assertTrue {
             savedCourseDTO!!.id != null
         }
     }
@@ -67,7 +68,7 @@ class CourseControllerUnitTest {
             .returnResult().responseBody
 
         println("courseDTOs: $courseDTOs")
-        Assertions.assertEquals(2, courseDTOs!!.size)
+        assertEquals(2, courseDTOs!!.size)
     }
 
     @Test
@@ -88,7 +89,7 @@ class CourseControllerUnitTest {
             .expectBody(CourseDTO::class.java)
             .returnResult().responseBody
 
-        Assertions.assertEquals("Build RestFul APis using SpringBoot and Kotlin1", updatedCourse!!.name)
+        assertEquals("Build RestFul APis using SpringBoot and Kotlin1", updatedCourse!!.name)
     }
 
     @Test
@@ -100,5 +101,53 @@ class CourseControllerUnitTest {
             .uri("/v1/courses/{courseId}", 100)
             .exchange()
             .expectStatus().isNoContent
+    }
+
+    @Test
+    fun addCourse_validation() {
+
+        every { courseServiceMock.addCourse(any()) } returns courseDTO(id = 1)
+
+        val courseDTO = CourseDTO(
+            null,
+            "",
+            ""
+        )
+
+        val response = webTestClient.post()
+            .uri("/v1/courses")
+            .bodyValue(courseDTO)
+            .exchange()
+            .expectStatus().isBadRequest
+            .expectBody(String::class.java)
+            .returnResult()
+            .responseBody
+
+        assertEquals("CourseDTO.category must not be blank, CourseDTO.name must not be blank", response)
+
+    }
+
+    @Test
+    fun addCourse_runtimeException() {
+        val courseDTO = CourseDTO(
+            null,
+            "Build RestFul APis using SpringBoot and Kotlin1", "Development"
+        )
+
+        val errorMessage = "Unexpected Error occured"
+        every { courseServiceMock.addCourse(any()) } throws RuntimeException(errorMessage)
+
+
+        val response = webTestClient.post()
+            .uri("/v1/courses")
+            .bodyValue(courseDTO)
+            .exchange()
+            .expectStatus().is5xxServerError
+            .expectBody(String::class.java)
+            .returnResult()
+            .responseBody
+
+        assertEquals(errorMessage, response)
+
     }
 }

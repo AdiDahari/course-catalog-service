@@ -3,15 +3,18 @@ package dev.adidahari.coursecatalogservice.controller
 import dev.adidahari.coursecatalogservice.dto.CourseDTO
 import dev.adidahari.coursecatalogservice.service.CourseService
 import org.springframework.http.HttpStatus
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
+import javax.validation.Valid
 
 @RestController
 @RequestMapping("/v1/courses")
+@Validated
 class CourseController(val courseService: CourseService) {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun addCourse(@RequestBody courseDTO: CourseDTO): CourseDTO = courseService.addCourse(courseDTO)
+    fun addCourse(@RequestBody @Valid courseDTO: CourseDTO): CourseDTO = courseService.addCourse(courseDTO)
 
 
     @GetMapping
