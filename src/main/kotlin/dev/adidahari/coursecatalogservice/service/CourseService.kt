@@ -44,7 +44,7 @@ class CourseService(
         } ?: courseRepository.findAll()
 
         return courses.map {
-            CourseDTO(it.id, it.name, it.category)
+            CourseDTO(it.id, it.name, it.category, it.instructor!!.id)
         }
     }
 
@@ -58,7 +58,7 @@ class CourseService(
                     it.name = courseDTO.name
                     it.category = courseDTO.category
                     courseRepository.save(it)
-                    CourseDTO(it.id, it.name, it.category)
+                    CourseDTO(it.id, it.name, it.category, it.instructor!!.id)
                 }
         } else {
             throw CourseNotFoundException("No Course found for the given Id: $courseId")
